@@ -22,12 +22,26 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.pawan.newsapp.R
+import com.pawan.newsapp.viewmodel.Article
+import com.pawan.newsapp.viewmodel.FavoritesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(navController: NavController, articleTitle: String, articleDescription: String, articleImageUrl: String, articleUrl: String) {
+fun DetailScreen(
+    navController: NavController,
+    articleTitle: String,
+    articleDescription: String,
+    articleImageUrl: String,
+    articleUrl: String,
+    favoritesViewModel: FavoritesViewModel
+) {
+    val article = Article(articleTitle, articleDescription, articleImageUrl, articleUrl)
 
-    var imageRes by remember { mutableStateOf(R.drawable.unselectbookmark) }
+    // Check if article is in the favorites list
+    val isFavorite = favoritesViewModel.favoritesList.contains(article)
+
+    // Use this value to manage bookmark button state
+    var imageRes by remember { mutableStateOf(if (isFavorite) R.drawable.bookmarkselect else R.drawable.unselectbookmark) }
 
     Scaffold(
         topBar = {
@@ -40,22 +54,26 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
                 },
                 actions = {
                     IconButton(onClick = {
-                        imageRes = if (imageRes == R.drawable.bookmarkselect) {
-                            R.drawable.unselectbookmark
+                        // Toggle the favorite state
+                        if (imageRes == R.drawable.bookmarkselect) {
+                            favoritesViewModel.removeFromFavorites(article)
+                            imageRes = R.drawable.unselectbookmark
                         } else {
-                            R.drawable.bookmarkselect
+                            favoritesViewModel.addToFavorites(article)
+                            imageRes = R.drawable.bookmarkselect
                         }
                     }) {
                         Image(
-                            painter = painterResource(id = imageRes), // Use the current image resource
+                            painter = painterResource(id = imageRes),
                             contentDescription = "Action Image",
-                            modifier = Modifier.size(24.dp) // Icon size
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                     IconButton(onClick = {}) {
                         Icon(Icons.Default.MoreVert, "More")
                     }
-                }            )
+                }
+            )
         }
     ) { padding ->
         Column(
@@ -87,7 +105,7 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Trending • 6 hours ago", // Update this with actual data
+                        text = "Trending • 6 hours ago",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -113,3 +131,6 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
         }
     }
 }
+
+
+

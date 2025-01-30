@@ -83,6 +83,7 @@ fun NewsItem(article: Article, navController: NavController) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
+                        .padding(top = 2.dp)
                 )
             }
             Column(modifier = Modifier.padding(8.dp)) {
