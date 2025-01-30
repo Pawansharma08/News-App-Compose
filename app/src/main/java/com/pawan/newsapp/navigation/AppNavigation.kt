@@ -6,17 +6,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
-import com.pawan.newsapp.screens.DetailScreen
-import com.pawan.newsapp.screens.DiscoverScreen
-import com.pawan.newsapp.screens.NewsScreen
+import com.pawan.newsapp.screens.*
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") { NewsScreen(navController = navController) }
-        composable("news") { DiscoverScreen(navController) }
+    NavHost(navController = navController, startDestination = BottomNavItem.News.route) {
+        composable(BottomNavItem.News.route) { NewsScreen(navController = navController) }
 
-        // Updated composable for DetailScreen with arguments
+        composable(BottomNavItem.Discover.route) { DiscoverScreen(navController) }
+
+        composable(BottomNavItem.Favorite.route) { FavoriteScreen() }
+
+        composable(BottomNavItem.Settings.route) { SettingsScreen() }
+
         composable(
             "detail/{title}/{description}/{imageUrl}/{url}",
             arguments = listOf(

@@ -39,9 +39,7 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
                     }
                 },
                 actions = {
-                    // IconButton with toggling image functionality
                     IconButton(onClick = {
-                        // Toggle between two images
                         imageRes = if (imageRes == R.drawable.bookmarkselect) {
                             R.drawable.unselectbookmark
                         } else {
@@ -54,7 +52,6 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
                             modifier = Modifier.size(24.dp) // Icon size
                         )
                     }
-                    // Second IconButton for More options
                     IconButton(onClick = {}) {
                         Icon(Icons.Default.MoreVert, "More")
                     }
@@ -66,7 +63,6 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
                 .padding(padding)
                 .fillMaxSize()
         ) {
-            // Load the image dynamically
             Image(
                 painter = rememberAsyncImagePainter(articleImageUrl),
                 contentDescription = "News Image",
@@ -79,7 +75,6 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                // Title of the article
                 Text(
                     text = articleTitle,
                     style = MaterialTheme.typography.headlineMedium
@@ -87,7 +82,6 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Publish info
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -100,7 +94,6 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Article description
                 Text(
                     text = articleDescription,
                     style = MaterialTheme.typography.bodyLarge,
@@ -110,7 +103,6 @@ fun DetailScreen(navController: NavController, articleTitle: String, articleDesc
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Button to open the full article in a browser
                 Button(onClick = {
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(articleUrl))
                     navController.context.startActivity(intent)
