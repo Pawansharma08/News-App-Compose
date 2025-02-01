@@ -12,31 +12,27 @@ import com.pawan.newsapp.viewmodel.FavoritesViewModel
 
 @Composable
 fun AppNavigation(navController: NavHostController) {
-    // Initialize the ViewModel once for the entire navigation graph
+
     val favoritesViewModel: FavoritesViewModel = viewModel()
 
     NavHost(navController = navController, startDestination = BottomNavItem.News.route) {
-        // News screen
+
         composable(BottomNavItem.News.route) {
             NewsScreen(navController = navController)
         }
 
-        // Discover screen
         composable(BottomNavItem.Discover.route) {
             DiscoverScreen(navController = navController)
         }
 
-        // Favorites screen
         composable(BottomNavItem.Favorite.route) {
             FavoritesScreen(favoritesViewModel = favoritesViewModel,navController)
         }
 
-        // Settings screen
         composable(BottomNavItem.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(navController)
         }
 
-        // Detail screen with arguments (title, description, imageUrl, url)
         composable(
             "detail/{title}/{description}/{imageUrl}/{url}",
             arguments = listOf(
@@ -51,7 +47,6 @@ fun AppNavigation(navController: NavHostController) {
             val imageUrl = backStackEntry.arguments?.getString("imageUrl") ?: ""
             val url = backStackEntry.arguments?.getString("url") ?: ""
 
-            // Pass the favoritesViewModel to DetailScreen
             DetailScreen(navController, title, description, imageUrl, url, favoritesViewModel)
         }
     }
