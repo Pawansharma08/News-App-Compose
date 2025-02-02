@@ -34,13 +34,13 @@ class MainActivity : ComponentActivity() {
             setKeepOnScreenCondition { !viewModel.isReady.value }
             setOnExitAnimationListener { screen ->
                 val zoomX = ObjectAnimator.ofFloat(screen.iconView, View.SCALE_X, 0.4f, 0.0f)
-                val zoomY = ObjectAnimator.ofFloat(screen.iconView, View.SCALE_Y, 0.4f, 0.0f)
-
                 zoomX.interpolator = OvershootInterpolator()
-                zoomY.interpolator = OvershootInterpolator()
                 zoomX.duration = 500L
-                zoomY.duration = 500L
                 zoomX.doOnEnd { screen.remove() }
+
+                val zoomY = ObjectAnimator.ofFloat(screen.iconView, View.SCALE_Y, 0.4f, 0.0f)
+                zoomY.interpolator = OvershootInterpolator()
+                zoomY.duration = 500L
                 zoomY.doOnEnd { screen.remove() }
 
                 zoomX.start()
