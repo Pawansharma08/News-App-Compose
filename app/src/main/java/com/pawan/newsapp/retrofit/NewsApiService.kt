@@ -13,7 +13,7 @@ interface NewsApiService {
         @Query("q") query: String = "india",
         @Query("from") from: String = getYesterdayDate(),
         @Query("to") to: String = getYesterdayDate(),
-        @Query("sortBy") sortBy: String = "popularity",
+        @Query("sortBy") sortBy: String = "relevancy",
         @Query("apiKey") apiKey: String = "f5e7b2c8af3b4df6bd59aa8ac06c1cf0"
     ): NewsResponse
 }

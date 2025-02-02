@@ -3,6 +3,7 @@ package com.pawan.newsapp.screens
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -37,6 +38,8 @@ fun DetailScreen(
 ) {
     val article = Article(articleTitle, articleDescription, articleImageUrl, articleUrl)
 
+    val context = navController.context
+
     // Check if article is in the favorites list
     val isFavorite = favoritesViewModel.favoritesList.contains(article)
 
@@ -58,19 +61,19 @@ fun DetailScreen(
                         if (imageRes == R.drawable.bookmarkselect) {
                             favoritesViewModel.removeFromFavorites(article)
                             imageRes = R.drawable.unselectbookmark
+                            Toast.makeText(context, "Remove from Favorite", Toast.LENGTH_SHORT).show()
                         } else {
                             favoritesViewModel.addToFavorites(article)
                             imageRes = R.drawable.bookmarkselect
+                            Toast.makeText(context, "Added to Favorite", Toast.LENGTH_SHORT).show()
                         }
-                    }) {
+                    },
+                        modifier = Modifier.padding(end = 8.dp)) {
                         Image(
                             painter = painterResource(id = imageRes),
                             contentDescription = "Action Image",
                             modifier = Modifier.size(24.dp)
                         )
-                    }
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.MoreVert, "More")
                     }
                 }
             )

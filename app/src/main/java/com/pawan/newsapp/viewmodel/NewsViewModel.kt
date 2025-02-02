@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 
 class NewsViewModel : ViewModel() {
 
-    // State for articles fetched from the API
+    // State for articles fetched from API
     private val _newsState = MutableStateFlow<List<Article>>(emptyList())
     val newsState: StateFlow<List<Article>> = _newsState
 
@@ -22,15 +22,15 @@ class NewsViewModel : ViewModel() {
     private val _isError = MutableStateFlow(false)
     val isError: StateFlow<Boolean> = _isError
 
-    // State to manage the list of favorite articles
-    private val _favoriteArticles = MutableStateFlow<MutableSet<Article>>(mutableSetOf())
-    val favoriteArticles: StateFlow<MutableSet<Article>> = _favoriteArticles
+    // Favorite articles
+    private val _favoriteArticles = MutableStateFlow<List<Article>>(emptyList())
+    val favoriteArticles: StateFlow<List<Article>> = _favoriteArticles
 
     init {
         fetchNews()
     }
 
-    // Fetch news from API
+    // Fetch news from API and assign categories
     private fun fetchNews() {
         viewModelScope.launch {
             try {
@@ -38,8 +38,11 @@ class NewsViewModel : ViewModel() {
                 _isError.value = false
 
                 val response = RetrofitInstance.api.getNews()
-                _newsState.value = response.articles
+                val articles = response.articles.map { article ->
+                    article.copy(category = detectCategory(article.title, article.description))
+                }
 
+                _newsState.value = articles
             } catch (e: Exception) {
                 e.printStackTrace()
                 _isError.value = true
@@ -49,5 +52,33 @@ class NewsViewModel : ViewModel() {
         }
     }
 
+    // Detect category based on keywords in title & description
+    private fun detectCategory(title: String, description: String?): String {
+        val text = "$title ${description ?: ""}".lowercase()
 
+        return when {
+            "cricket" in text || "football" in text || "match" in text -> "Sports"
+            "stocks" in text || "market" in text || "economy" in text -> "Business"
+            "ai" in text || "tech" in text || "innovation" in text -> "Technology"
+            "health" in text || "medical" in text || "covid" in text -> "Health"
+            "movie" in text || "bollywood" in text || "hollywood" in text -> "Entertainment"
+            else -> "General"
+        }
+    }
+
+    // Add article to favorites
+    fun addToFavorites(article: Article) {
+        val updatedFavorites = _favoriteArticles.value.toMutableList()
+        if (!updatedFavorites.contains(article)) {
+            updatedFavorites.add(article)
+            _favoriteArticles.value = updatedFavorites
+        }
+    }
+
+    // Remove article from favorites
+    fun removeFromFavorites(article: Article) {
+        val updatedFavorites = _favoriteArticles.value.toMutableList()
+        updatedFavorites.remove(article)
+        _favoriteArticles.value = updatedFavorites
+    }
 }

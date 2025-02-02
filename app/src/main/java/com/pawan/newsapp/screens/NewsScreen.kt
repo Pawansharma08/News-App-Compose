@@ -36,7 +36,7 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
     val isError by viewModel.isError.collectAsState()
     val context = LocalContext.current
 
-    // SharedPreferences to store the notification state
+    // SharedPreferences for notification settings
     val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     var isNotificationsEnabled by remember { mutableStateOf(sharedPreferences.getBoolean("notifications_enabled", true)) }
 
@@ -60,16 +60,11 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
         }
     }
 
-    // Only trigger notification when new data comes, if notifications are enabled
+    // Trigger notification when new data arrives (if enabled)
     LaunchedEffect(newsState) {
         if (newsState.isNotEmpty() && isNotificationsEnabled) {
-            val article = newsState.first() // Get the first article
-            val title = article.title
-            val imageUrl = article.imageUrl
-
-            sendNewsNotification(
-                context, title, imageUrl // Pass title and imageUrl to the notification function
-            )
+            val article = newsState.first()
+            sendNewsNotification(context, article.title, article.imageUrl)
         }
     }
 
@@ -78,9 +73,40 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
         sharedPreferences.edit().putBoolean("notifications_enabled", isNotificationsEnabled).apply()
     }
 
+    // Category Dropdown Logic
+    val categories = listOf("All", "Business", "Technology", "Sports", "Entertainment", "Health")
+    var selectedCategory by remember { mutableStateOf("All") }
+    var isDropdownExpanded by remember { mutableStateOf(false) }
+
+    // Filter news by category
+    val filteredNews = if (selectedCategory == "All") newsState else newsState.filter { it.category == selectedCategory }
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("News App") })
+            TopAppBar(
+                title = { Text("News App") },
+                actions = {
+                    Box {
+                        Button(onClick = { isDropdownExpanded = true }) {
+                            Text(selectedCategory)
+                        }
+                        DropdownMenu(
+                            expanded = isDropdownExpanded,
+                            onDismissRequest = { isDropdownExpanded = false }
+                        ) {
+                            categories.forEach { category ->
+                                DropdownMenuItem(
+                                    text = { Text(category) },
+                                    onClick = {
+                                        selectedCategory = category
+                                        isDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            )
         }
     ) { paddingValues ->
         Box(
@@ -98,16 +124,16 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
                     Text("Server Error. Try again later.", style = MaterialTheme.typography.bodyLarge)
                 }
 
-                newsState.isNotEmpty() -> {
+                filteredNews.isNotEmpty() -> {
                     LazyColumn {
-                        items(newsState) { article ->
+                        items(filteredNews) { article ->
                             NewsItem(article, navController)
                         }
                     }
                 }
 
                 else -> {
-                    Text("No news available.", style = MaterialTheme.typography.bodyLarge)
+                    Text("No news available for this category.", style = MaterialTheme.typography.bodyLarge)
                 }
             }
         }
@@ -116,8 +142,6 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
 
 @Composable
 fun NewsItem(article: Article, navController: NavController) {
-    val context = LocalContext.current
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
