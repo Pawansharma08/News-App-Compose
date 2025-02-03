@@ -8,15 +8,23 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -27,6 +35,7 @@ import coil.compose.rememberImagePainter
 import com.pawan.newsapp.model.Article
 import com.pawan.newsapp.notification.sendNewsNotification
 import com.pawan.newsapp.viewmodel.NewsViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,11 +45,9 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
     val isError by viewModel.isError.collectAsState()
     val context = LocalContext.current
 
-    // SharedPreferences for notification settings
     val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     var isNotificationsEnabled by remember { mutableStateOf(sharedPreferences.getBoolean("notifications_enabled", true)) }
 
-    // Permission request launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { isGranted ->
@@ -52,7 +59,6 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
         }
     )
 
-    // Request notification permission on launch
     LaunchedEffect(Unit) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
             ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -60,7 +66,6 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
         }
     }
 
-    // Trigger notification when new data arrives (if enabled)
     LaunchedEffect(newsState) {
         if (newsState.isNotEmpty() && isNotificationsEnabled) {
             val article = newsState.first()
@@ -68,17 +73,14 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
         }
     }
 
-    // Save notification setting to SharedPreferences when it changes
     LaunchedEffect(isNotificationsEnabled) {
         sharedPreferences.edit().putBoolean("notifications_enabled", isNotificationsEnabled).apply()
     }
 
-    // Category Dropdown Logic
     val categories = listOf("All", "Business", "Technology", "Sports", "Entertainment", "Health")
     var selectedCategory by remember { mutableStateOf("All") }
     var isDropdownExpanded by remember { mutableStateOf(false) }
 
-    // Filter news by category
     val filteredNews = if (selectedCategory == "All") newsState else newsState.filter { it.category == selectedCategory }
 
     Scaffold(
@@ -86,7 +88,9 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
             TopAppBar(
                 title = { Text("News App") },
                 actions = {
-                    Box {
+                    Box(
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
                         Button(onClick = { isDropdownExpanded = true }) {
                             Text(selectedCategory)
                         }
@@ -109,19 +113,32 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
             )
         }
     ) { paddingValues ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentAlignment = Alignment.Center
+                .padding(paddingValues)
         ) {
+            if (filteredNews.isNotEmpty()) {
+//                NewsSlideshow(filteredNews)
+            }
+
             when {
                 isLoading -> {
-                    CircularProgressIndicator()
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
                 }
 
                 isError -> {
-                    Text("Server Error. Try again later.", style = MaterialTheme.typography.bodyLarge)
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Server Error. Try again later.", style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
 
                 filteredNews.isNotEmpty() -> {
@@ -133,45 +150,125 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
                 }
 
                 else -> {
-                    Text("No news available for this category.", style = MaterialTheme.typography.bodyLarge)
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("No news available for this category.", style = MaterialTheme.typography.bodyLarge)
+                    }
                 }
             }
         }
     }
 }
 
+//@Composable
+//fun NewsSlideshow(articles: List<Article>) {
+//    val pagerState = rememberPagerState { 3 }
+//
+//    LaunchedEffect(Unit) {
+//        while (true) {
+//            delay(3000) // Auto-slide every 3 seconds
+//            val nextPage = (pagerState.currentPage + 1) % articles.size
+//            pagerState.animateScrollToPage(nextPage)
+//        }
+//    }
+//
+//    HorizontalPager(
+//        state = pagerState,
+//        beyondViewportPageCount = articles.size,
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .height(250.dp)
+//    ) { page ->
+//        Box(
+//            modifier = Modifier.fillMaxSize()
+//        ) {
+//            Image(
+//                painter = rememberImagePainter(articles[page].imageUrl),
+//                contentDescription = null,
+//                modifier = Modifier.fillMaxSize(),
+//                contentScale = ContentScale.Crop
+//            )
+//        }
+//    }
+//}
+
 @Composable
 fun NewsItem(article: Article, navController: NavController) {
+    // If the imageUrl is empty or null, return early and don't display the item
+    if (article.imageUrl.isNullOrEmpty()) return
+
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        isVisible = true
+    }
+
     Card(
         modifier = Modifier
-            .fillMaxWidth()
             .padding(8.dp)
+            .fillMaxWidth()
             .clickable {
-                navController.navigate("detail/${Uri.encode(article.title)}/${Uri.encode(article.description ?: "No description")}/${Uri.encode(article.imageUrl ?: "")}/${Uri.encode(article.url)}")
+                navController.navigate(
+                    "detail/${Uri.encode(article.title)}/${Uri.encode(article.description ?: "No description")}/${Uri.encode(article.imageUrl ?: "")}/${Uri.encode(article.url)}"
+                )
             },
+        shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column {
-            article.imageUrl?.let {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(230.dp)
+            ) {
+                // News Image
                 Image(
-                    painter = rememberImagePainter(it),
+                    painter = rememberImagePainter(article.imageUrl),
                     contentDescription = null,
                     modifier = Modifier
+                        .fillMaxSize()
+                        .clip(MaterialTheme.shapes.large),
+                    contentScale = ContentScale.Crop
+                )
+
+                // Title Overlay with Smaller Font & Ellipsis
+                Box(
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
-                        .padding(top = 2.dp)
-                )
+                        .align(Alignment.BottomStart)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f))
+                            )
+                        )
+                        .padding(8.dp)
+                ) {
+                    Text(
+                        text = article.title,
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyLarge, // Smaller font size
+                        maxLines = 1, // Limit title to one line
+                        overflow = TextOverflow.Ellipsis, // Cut off long titles with "..."
+                        modifier = Modifier.align(Alignment.BottomStart)
+                    )
+                }
             }
-            Column(modifier = Modifier.padding(8.dp)) {
-                Text(text = article.title, style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = article.description ?: "No description available",
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
-                )
+
+            // Animated Description with Increased Lines
+            AnimatedVisibility(visible = isVisible) {
+                Column(modifier = Modifier.padding(8.dp)) {
+                    Text(
+                        text = article.description ?: "No description available",
+                        style = MaterialTheme.typography.bodyMedium,
+                        maxLines = 4, // Increased from 2 to 4 for longer descriptions
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
         }
     }
 }
+
+
+
