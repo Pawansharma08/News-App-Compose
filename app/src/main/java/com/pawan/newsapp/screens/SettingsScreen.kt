@@ -18,13 +18,11 @@ import androidx.navigation.NavController
 fun SettingsScreen(navController: NavController) {
     val context = LocalContext.current
 
-    // SharedPreferences to store the notification state
     val sharedPreferences = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     var isNotificationsEnabled by remember {
         mutableStateOf(sharedPreferences.getBoolean("notifications_enabled", true))
     }
 
-    // Save notification setting to SharedPreferences when it changes
     LaunchedEffect(isNotificationsEnabled) {
         sharedPreferences.edit().putBoolean("notifications_enabled", isNotificationsEnabled).apply()
     }
@@ -48,7 +46,6 @@ fun SettingsScreen(navController: NavController) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            // Notification Toggle
             Text(text = "Notifications", style = MaterialTheme.typography.titleLarge)
             Spacer(modifier = Modifier.height(8.dp))
 
@@ -67,7 +64,6 @@ fun SettingsScreen(navController: NavController) {
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // You can add other settings here if needed
         }
     }
 }

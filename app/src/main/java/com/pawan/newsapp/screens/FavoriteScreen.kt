@@ -59,10 +59,8 @@ fun FavoritesScreen(favoritesViewModel: FavoritesViewModel, navController: NavCo
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
                             .clickable {
-                                // Add the article to favorites if it's not already in the list
                                 favoritesViewModel.addToFavorites(article)
 
-                                // Navigate to the detail screen with article parameters
                                 navController.navigate(
                                     "detail/${Uri.encode(article.title)}/${Uri.encode(article.description ?: "No description")}/${
                                         Uri.encode(
@@ -78,7 +76,6 @@ fun FavoritesScreen(favoritesViewModel: FavoritesViewModel, navController: NavCo
                                 .fillMaxWidth()
                                 .height(230.dp)
                         ) {
-                            // News Image
                             Image(
                                 painter = rememberImagePainter(article.imageUrl),
                                 contentDescription = null,
@@ -88,7 +85,6 @@ fun FavoritesScreen(favoritesViewModel: FavoritesViewModel, navController: NavCo
                                 contentScale = ContentScale.Crop
                             )
 
-                            // Title Overlay with Smaller Font & Ellipsis
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -106,9 +102,9 @@ fun FavoritesScreen(favoritesViewModel: FavoritesViewModel, navController: NavCo
                                 Text(
                                     text = article.title,
                                     color = Color.White,
-                                    style = MaterialTheme.typography.bodyLarge, // Smaller font size
-                                    maxLines = 1, // Limit title to one line
-                                    overflow = TextOverflow.Ellipsis, // Cut off long titles with "..."
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                     modifier = Modifier.align(Alignment.BottomStart)
                                 )
                             }
@@ -118,7 +114,7 @@ fun FavoritesScreen(favoritesViewModel: FavoritesViewModel, navController: NavCo
                                 Text(
                                     text = article.description ?: "No description available",
                                     style = MaterialTheme.typography.bodyMedium,
-                                    maxLines = 4, // Increased from 2 to 4 for longer descriptions
+                                    maxLines = 4,
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }

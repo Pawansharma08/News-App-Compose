@@ -10,19 +10,15 @@ import kotlinx.coroutines.launch
 
 class NewsViewModel : ViewModel() {
 
-    // State for articles fetched from API
     private val _newsState = MutableStateFlow<List<Article>>(emptyList())
     val newsState: StateFlow<List<Article>> = _newsState
 
-    // State for loading status
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    // State for error status
     private val _isError = MutableStateFlow(false)
     val isError: StateFlow<Boolean> = _isError
 
-    // Favorite articles
     private val _favoriteArticles = MutableStateFlow<List<Article>>(emptyList())
     val favoriteArticles: StateFlow<List<Article>> = _favoriteArticles
 
@@ -30,7 +26,6 @@ class NewsViewModel : ViewModel() {
         fetchNews()
     }
 
-    // Fetch news from API and assign categories
     private fun fetchNews() {
         viewModelScope.launch {
             try {
@@ -52,7 +47,6 @@ class NewsViewModel : ViewModel() {
         }
     }
 
-    // Detect category based on keywords in title & description
     private fun detectCategory(title: String, description: String?): String {
         val text = "$title ${description ?: ""}".lowercase()
 
@@ -66,7 +60,6 @@ class NewsViewModel : ViewModel() {
         }
     }
 
-    // Add article to favorites
     fun addToFavorites(article: Article) {
         val updatedFavorites = _favoriteArticles.value.toMutableList()
         if (!updatedFavorites.contains(article)) {
@@ -75,7 +68,6 @@ class NewsViewModel : ViewModel() {
         }
     }
 
-    // Remove article from favorites
     fun removeFromFavorites(article: Article) {
         val updatedFavorites = _favoriteArticles.value.toMutableList()
         updatedFavorites.remove(article)

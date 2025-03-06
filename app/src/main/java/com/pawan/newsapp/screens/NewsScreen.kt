@@ -17,6 +17,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +28,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -83,6 +86,13 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
 
     val filteredNews = if (selectedCategory == "All") newsState else newsState.filter { it.category == selectedCategory }
 
+    var searchQuery by remember { mutableStateOf("") }
+
+    val searchedNews = if (searchQuery.isEmpty()) filteredNews else filteredNews.filter {
+        it.title.contains(searchQuery, ignoreCase = true) ||
+                it.description?.contains(searchQuery, ignoreCase = true) == true
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -118,8 +128,17 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (filteredNews.isNotEmpty()) {
-//                NewsSlideshow(filteredNews)
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                label = { Text("Search") },
+                modifier = Modifier
+                    .padding(8.dp)
+                    .fillMaxWidth(),
+            )
+
+            if (searchedNews.isNotEmpty()) {
+//                NewsSlideshow(searchedNews)
             }
 
             when {
@@ -141,9 +160,9 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
                     }
                 }
 
-                filteredNews.isNotEmpty() -> {
+                searchedNews.isNotEmpty() -> {
                     LazyColumn {
-                        items(filteredNews) { article ->
+                        items(searchedNews) { article ->
                             NewsItem(article, navController)
                         }
                     }
@@ -164,8 +183,9 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
 
 //@Composable
 //fun NewsSlideshow(articles: List<Article>) {
-//    val pagerState = rememberPagerState { 3 }
+//    val pagerState = rememberPagerState{3}
 //
+//    // Auto-slide every 3 seconds
 //    LaunchedEffect(Unit) {
 //        while (true) {
 //            delay(3000) // Auto-slide every 3 seconds
@@ -176,7 +196,6 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
 //
 //    HorizontalPager(
 //        state = pagerState,
-//        beyondViewportPageCount = articles.size,
 //        modifier = Modifier
 //            .fillMaxWidth()
 //            .height(250.dp)
@@ -184,6 +203,7 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
 //        Box(
 //            modifier = Modifier.fillMaxSize()
 //        ) {
+//            // Display the image in the carousel
 //            Image(
 //                painter = rememberImagePainter(articles[page].imageUrl),
 //                contentDescription = null,
@@ -193,6 +213,8 @@ fun NewsScreen(viewModel: NewsViewModel = viewModel(), navController: NavControl
 //        }
 //    }
 //}
+
+
 
 @Composable
 fun NewsItem(article: Article, navController: NavController) {
@@ -222,7 +244,6 @@ fun NewsItem(article: Article, navController: NavController) {
                     .fillMaxWidth()
                     .height(230.dp)
             ) {
-                // News Image
                 Image(
                     painter = rememberImagePainter(article.imageUrl),
                     contentDescription = null,
@@ -232,7 +253,6 @@ fun NewsItem(article: Article, navController: NavController) {
                     contentScale = ContentScale.Crop
                 )
 
-                // Title Overlay with Smaller Font & Ellipsis
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -247,15 +267,14 @@ fun NewsItem(article: Article, navController: NavController) {
                     Text(
                         text = article.title,
                         color = Color.White,
-                        style = MaterialTheme.typography.bodyLarge, // Smaller font size
-                        maxLines = 1, // Limit title to one line
-                        overflow = TextOverflow.Ellipsis, // Cut off long titles with "..."
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.align(Alignment.BottomStart)
                     )
                 }
             }
 
-            // Animated Description with Increased Lines
             AnimatedVisibility(visible = isVisible) {
                 Column(modifier = Modifier.padding(8.dp)) {
                     Text(
